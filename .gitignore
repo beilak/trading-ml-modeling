@@ -158,3 +158,9 @@ init_data
 
 .venv
 tmp
+
+
+models/*
+data/*
+
+.DS_Store
