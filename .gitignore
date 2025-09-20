@@ -158,6 +158,7 @@ init_data
 
 .venv
 tmp
+/tmp
 
 
 models/*
