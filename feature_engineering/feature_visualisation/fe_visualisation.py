@@ -10,7 +10,7 @@ st.set_page_config(page_title="Stock Feature Visualizer", layout="wide")
 # Load data
 @st.cache_data
 def load_data():
-    df = pd.read_csv('data/your_data.csv', parse_dates=['Date'])
+    df = pd.read_csv('data/moex_with_features.csv', parse_dates=['Date'])
     return df
 
 df = load_data()
@@ -24,19 +24,19 @@ max_date = df['Date'].max()
 date_range = st.sidebar.date_input("Select Date Range", [min_date, max_date], min_value=min_date, max_value=max_date)
 
 # Features (excluding non-feature columns)
-non_feature_cols = ['Date', 'ticker', 'open', 'high', 'low', 'close', 'volume', 'OHLCV']
+non_feature_cols = ['Date', 'Ticker', 'open', 'high', 'low', 'close', 'volume', 'OHLCV']
 feature_cols = [col for col in df.columns if col not in non_feature_cols]
 selected_feature = st.sidebar.selectbox("Select Feature", feature_cols)
 
 # Tickers
-tickers = df['ticker'].unique().tolist()
-selected_tickers = st.sidebar.multiselect("Select Tickers", tickers, default=tickers)
+Tickers = df['Ticker'].unique().tolist()
+selected_Tickers = st.sidebar.multiselect("Select Tickers", Tickers, default=Tickers)
 
 # Filter data
 filtered_df = df[
     (df['Date'] >= pd.to_datetime(date_range[0])) &
     (df['Date'] <= pd.to_datetime(date_range[1])) &
-    (df['ticker'].isin(selected_tickers))
+    (df['Ticker'].isin(selected_Tickers))
 ]
 
 # MAIN content
@@ -48,9 +48,9 @@ else:
     # LINE PLOT
     st.subheader(f"Line Plot: `{selected_feature}` over Time")
     fig, ax = plt.subplots(figsize=(12, 5))
-    for ticker in selected_tickers:
-        ticker_data = filtered_df[filtered_df['ticker'] == ticker]
-        ax.plot(ticker_data['Date'], ticker_data[selected_feature], label=ticker)
+    for Ticker in selected_Tickers:
+        Ticker_data = filtered_df[filtered_df['Ticker'] == Ticker]
+        ax.plot(Ticker_data['Date'], Ticker_data[selected_feature], label=Ticker)
     ax.set_title(f"{selected_feature} over time")
     ax.set_xlabel("Date")
     ax.set_ylabel(selected_feature)
@@ -69,12 +69,12 @@ else:
     st.subheader("📊 Feature Statistics (with filters)")
 
     # Compute stats
-    stats_df = filtered_df.groupby('ticker')[selected_feature].agg(
+    stats_df = filtered_df.groupby('Ticker')[selected_feature].agg(
         ['count', 'min', 'max', 'mean', 'median', 'std', 'skew']
     ).reset_index()
 
     # Rename columns for clarity
-    stats_df.columns = ['ticker', 'count', 'min', 'max', 'mean', 'median', 'std', 'skew']
+    stats_df.columns = ['Ticker', 'count', 'min', 'max', 'mean', 'median', 'std', 'skew']
 
     # Filtering form
     with st.expander("🔍 Filter Statistics Table"):
