@@ -28,8 +28,11 @@ NO_IMPORTANCE_FESTURES = [
     "sma3_cross_sma10",
     "is_month_end",
     "sma70_cross_sma200",
-    
-    'high_to_sma_30', 'sma_5', 'intraday_move_norm', 'sma_20', 'sma_150', 'fft_abs_0', 'rolling_std_7', 'wv_L0_mean', 'open_to_sma_15', 'close_to_sma_20', 'sarimax_pred_3d_to_today', 'is_quarter_end', 'sma_7', 'sma_30', 'close_to_sma_40', 'sma_10', 'is_month_start', 'sma50_above_sma200', 'sma20_above_sma50', 'sma20_cross_sma50',
+    'high_to_sma_30', 'sma_5', 
+    'intraday_move_norm', 'sma_20', 'sma_150', 'fft_abs_0', 'rolling_std_7',
+    'wv_L0_mean', 'open_to_sma_15', 'close_to_sma_20', 'sarimax_pred_3d_to_today', 
+    'is_quarter_end', 'sma_7', 'sma_30', 'close_to_sma_40', 'sma_10', 'is_month_start',
+    'sma50_above_sma200', 'sma20_above_sma50', 'sma20_cross_sma50',
 ]
 
 
@@ -77,6 +80,9 @@ def train_model_LGBMClassifier(X: pd.DataFrame, y: pd.DataFrame):
 
 
 def walk_forward_train_LGBMClasifier_model(df: pd.DataFrame, X: pd.DataFrame, y: pd.DataFrame):
+    """
+    params: df: Полный dataframe, X: Фичи, y: Таргет
+    """
     # --- Правильное разделение данных (Walk-Forward Validation) ---
     # Мы будем использовать 5 "сдвигов". Модель будет обучаться на части данных,
     # а тестироваться на следующем, более новом блоке.
@@ -106,27 +112,6 @@ def walk_forward_train_LGBMClasifier_model(df: pd.DataFrame, X: pd.DataFrame, y:
         print(f"Размер обучающей выборки: {len(X_train)}")
         print(f"Размер тестовой выборки: {len(X_test)}")
         
-        # Инициализируем модель
-        # class_weight='balanced' помогает модели лучше работать с несбалансированными классами
-        # n_jobs=-1 использует все доступные ядра процессора для ускорения
-        # model = RandomForestClassifier(
-        #     n_estimators=100,      # Количество деревьев в лесу
-        #     max_depth=10,          # Максимальная глубина каждого дерева
-        #     random_state=42,       # Для воспроизводимости результатов
-        #     class_weight='balanced',
-        #     n_jobs=-1
-        # )
-
-        # Инициализируем НОВУЮ модель
-        # model = LGBMClassifier(
-        #     objective='multiclass', # Важно указать, что у нас 3 класса
-        #     n_estimators=100,
-        #     max_depth=10,
-        #     random_state=42,
-        #     class_weight='balanced',
-        #     n_jobs=-1,
-        #     verbosity=-1 
-        # )
         model = train_model_LGBMClassifier(X_train, y_train)
         
         # Обучаем модель
@@ -138,21 +123,6 @@ def walk_forward_train_LGBMClasifier_model(df: pd.DataFrame, X: pd.DataFrame, y:
         y_pred = model.predict(X_test)
         # print("Получение вероятностей...")
         y_pred_proba = model.predict_proba(X_test)
-        
-        # Создаем массив для новых предсказаний, по умолчанию '0' (Hold)
-        # y_pred_filtered = np.zeros(len(y_test)) 
-
-        # Где вероятность класса +1 > порога, ставим +1
-        # buy_signals = y_pred_proba[:, 2] > CONFIDENCE_THRESHOLD 
-        # y_pred_filtered[buy_signals] = 1
-
-        # Где вероятность класса -1 > порога, ставим -1
-        # ВАЖНО: y_pred_proba возвращает вероятности в порядке классов [-1, 0, 1]
-        # Поэтому P(-1) это y_pred_proba[:, 0]
-        # P(0)  это y_pred_proba[:, 1]
-        # P(+1) это y_pred_proba[:, 2]
-        # sell_signals = y_pred_proba[:, 0] > CONFIDENCE_THRESHOLD
-        # y_pred_filtered[sell_signals] = -1
         
         # Оцениваем качество
         accuracy = accuracy_score(y_test, y_pred)

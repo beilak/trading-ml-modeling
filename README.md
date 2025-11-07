@@ -19,3 +19,11 @@ model with:
 3 - L2 
 4 - elasticnet
 ```
+
+
+Feature Visualisator
+
+```bash
+docker build -f Dockerfile.fn.visualisation.py  -t fe-feature_visualisation-app .
+docker run -p 8501:8501 fe-feature_visualisation-app             
+ ```
