@@ -1,0 +1,46 @@
+Metric,Value
+Start,2018-01-05 00:00:00
+End,2025-09-18 00:00:00
+Period,1507 days 00:00:00
+Start Value,1000000.0
+End Value,1596267.0308969445
+Total Return [%],59.62670308969443
+Benchmark Return [%],57.127274014660735
+Max Gross Exposure [%],100.00000002045965
+Total Fees Paid,32014.00042237756
+Max Drawdown [%],40.31923309043543
+Max Drawdown Duration,276 days 00:00:00
+Total Trades,530
+Total Closed Trades,509
+Total Open Trades,21
+Open Trade PnL,0.0
+Win Rate [%],78.58546168958742
+Best Trade [%],361.58708624459564
+Worst Trade [%],-41.65921320943016
+Avg Winning Trade [%],64.09523517533754
+Avg Losing Trade [%],-14.801761107609368
+Avg Winning Trade Duration,573 days 04:37:12
+Avg Losing Trade Duration,543 days 12:06:36.330275232
+Profit Factor,13.793163596075148
+Expectancy,1603.665523786056
+Sharpe Ratio,0.5622876264532782
+Calmar Ratio,0.29746327355782454
+Omega Ratio,1.210273433215146
+Sortino Ratio,0.2472833648734961
+Volatility [%],1.3897644083940863
+Skewness,-1.9314907666437857
+Kurtosis,41.546347362961896
+VaR 5%,-0.010476467165538402
+CVaR 5%,-0.03484539781718342
+Profit/Loss Ratio,4.33024386148126
+Return 2018 [%],0.0
+Return 2019 [%],0.8380430421945917
+Return 2020 [%],33.7947506937345
+Return 2021 [%],19.254380737725274
+Return 2022 [%],-20.6218671721895
+Return 2023 [%],56.09393880056872
+Return 2024 [%],-19.563852800857408
+Return 2025 [%],-0.45268740981374567
+Average Annual Return [%],8.667838236420305
+Min Annual Return [%],-20.6218671721895
+Max Annual Return [%],56.09393880056872
