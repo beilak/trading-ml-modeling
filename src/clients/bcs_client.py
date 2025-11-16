@@ -1,55 +1,67 @@
-from contextlib import asynccontextmanager
-from enum import StrEnum, auto
 import typing as tp
-from async_lru import alru_cache
-import httpx
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from enum import Enum, StrEnum, auto
+
+import httpx
+from async_lru import alru_cache
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class BCSConfig(BaseSettings):
     BCS_API_TOKEN: str
+    BCS_POST_API_TOKEN: str
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra='ignore')
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 class BCSAuth:
-    auth_url: tp.Final[str] = "https://be.broker.ru/trade-api-keycloak/realms/tradeapi/protocol/openid-connect/token"
+    auth_url: tp.Final[str] = (
+        "https://be.broker.ru/trade-api-keycloak/realms/tradeapi/protocol/openid-connect/token"
+    )
     client_id_reader: tp.Final[str] = "trade-api-read"
+    client_id_writer: tp.Final[str] = "trade-api-write"
 
     def __init__(self, token: str):
         self._token: str = token
-        
+
     @alru_cache(ttl=80000)
-    async def get_access_tocken(self) -> str:
+    async def get_access_tocken(self, writer: bool = False) -> str:
         client: httpx.AsyncClient
         async with httpx.AsyncClient() as client:
             auth_resp = await client.post(
-                self.auth_url, 
+                self.auth_url,
                 data={
-                    "client_id": self.client_id_reader,                    
+                    "client_id": self.client_id_reader
+                    if not writer
+                    else self.client_id_writer,
                     "refresh_token": self._token,
                     "grant_type": "refresh_token",
-                }
+                },
             )
-
         return auth_resp.json()["access_token"]
 
 
 class BCSClient:
     def __init__(self, auth: BCSAuth):
         self._auth = auth
-    
+
     @asynccontextmanager
-    async def _client(self) -> tp.AsyncGenerator[httpx.AsyncClient, None]:
-        token: str  = await self._auth.get_access_tocken()
+    async def _client(
+        self, writer: bool = False
+    ) -> tp.AsyncGenerator[httpx.AsyncClient, None]:
+        token: str = await self._auth.get_access_tocken(writer=writer)
         async with httpx.AsyncClient(
             headers={"Authorization": f"Bearer {token}"},
         ) as client:
             yield client
 
+
 class BCSLimits(BCSClient):
-    limits_url: tp.Final[str] = "https://be.broker.ru/trade-api-bff-limit/api/v1/limits"    
+    limits_url: tp.Final[str] = "https://be.broker.ru/trade-api-bff-limit/api/v1/limits"
 
     async def get_portfolio_limits(self) -> dict:
         async with self._client() as client:
@@ -59,7 +71,9 @@ class BCSLimits(BCSClient):
 
 
 class BCSPortfolio(BCSClient):
-    portfolio_url: tp.Final[str] = "https://be.broker.ru/trade-api-bff-portfolio/api/v1/portfolio"
+    portfolio_url: tp.Final[str] = (
+        "https://be.broker.ru/trade-api-bff-portfolio/api/v1/portfolio"
+    )
 
     async def get_profile_state(self) -> dict:
         async with self._client() as client:
@@ -73,19 +87,29 @@ class InstrumentsType(StrEnum):
 
 
 class BCSReferenceInfo(BCSClient):
-    ticker_info_url: tp.Final[str] = "https://be.broker.ru/trade-api-information-service/api/v1/instruments/by-tickers"
-    inst_types_url: tp.Final[str] = "https://be.broker.ru/trade-api-information-service/api/v1/instruments/by-type"
+    ticker_info_url: tp.Final[str] = (
+        "https://be.broker.ru/trade-api-information-service/api/v1/instruments/by-tickers"
+    )
+    inst_types_url: tp.Final[str] = (
+        "https://be.broker.ru/trade-api-information-service/api/v1/instruments/by-type"
+    )
 
-    async def get_instruments(self, instruments_type: InstrumentsType = InstrumentsType.stock) -> dict:
+    async def get_instruments(
+        self, instruments_type: InstrumentsType = InstrumentsType.stock
+    ) -> dict:
         async with self._client() as client:
-            instruments = await client.get(url=self.inst_types_url, params={"type": instruments_type})
+            instruments = await client.get(
+                url=self.inst_types_url, params={"type": instruments_type}
+            )
 
         return instruments.json()
-    
+
     async def get_tickers_info(self, tickers: list[str]) -> list[dict]:
         async with self._client() as client:
-            tickers = await client.post(url=self.ticker_info_url, json={"tickers": tickers})
-            
+            tickers = await client.post(
+                url=self.ticker_info_url, json={"tickers": tickers}
+            )
+
         return tickers.json()
 
 
@@ -100,15 +124,31 @@ class TimeFrame(StrEnum):
     W = "W"
     MN = "MN"
 
-class BCSCandles(BCSClient):
-    candles: tp.Final[str] = "https://be.broker.ru/trade-api-market-data-connector/api/v1/candles-chart"
 
-    async def get_candles(self, ticker: str, class_code: str = "TQBR", start_date: str | None = None, end_date: str | None = None, time_frame: TimeFrame = TimeFrame.D):
+class BCSCandles(BCSClient):
+    candles: tp.Final[str] = (
+        "https://be.broker.ru/trade-api-market-data-connector/api/v1/candles-chart"
+    )
+
+    async def get_candles(
+        self,
+        ticker: str,
+        class_code: str = "TQBR",
+        start_date: str | None = None,
+        end_date: str | None = None,
+        time_frame: TimeFrame = TimeFrame.D,
+    ):
         date_from = start_date if start_date else "1900-01-01T00:00:00Z"
-        date_to = end_date if end_date else datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+        date_to = (
+            end_date
+            if end_date
+            else datetime.now(timezone.utc)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z")
+        )
         async with self._client() as client:
             candles = await client.get(
-                url=self.candles, 
+                url=self.candles,
                 params={
                     "classCode": class_code,
                     "ticker": ticker,
@@ -119,3 +159,54 @@ class BCSCandles(BCSClient):
             )
 
         return candles.json()
+
+
+class OrderSide(Enum):
+    BUY = 1
+    SELL = 2
+
+
+class OrderType(Enum):
+    MARKET = 1
+    LIMIT = 2
+
+
+class ClassCode(Enum):
+    TQBR = "TQBR"
+
+
+class BCSOrder(BCSClient):
+    order: tp.Final[str] = "https://be.broker.ru/trade-api-bff-operations/api/v1/orders"
+
+    async def post_order(
+        self,
+        ticker: str,
+        class_code: ClassCode,
+        client_order_id: uuid.UUID,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: int,
+        price: float | None = None,
+    ) -> dict:
+        order = {
+            "ticker": ticker,
+            "classCode": class_code.value,
+            "clientOrderId": str(client_order_id),
+            "side": str(side.value),
+            "orderType": str(order_type.value),
+            "orderQuantity": order_quantity,
+        }
+        if price is not None:
+            order["price"] = price
+
+        try:
+            async with self._client(writer=True) as client:
+                response = await client.post(
+                    url=self.order,
+                    json=order,
+                )
+        except Exception as e:
+            print(f"Failed to post order: {e}")
+            raise
+
+        return response.json()
