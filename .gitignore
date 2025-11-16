@@ -171,7 +171,5 @@ data/*
 env
 
 
-/news
 news.csv
 news_full.csv
-news_score.csv
