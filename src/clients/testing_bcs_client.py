@@ -1,4 +1,4 @@
-from  trading.clients.bcs_client import BCSAuth, BCSConfig, BCSLimits, BCSPortfolio, BCSReferenceInfo, InstrumentsType, BCSCandles
+from  src.clients.bcs_client import BCSAuth, BCSConfig, BCSLimits, BCSPortfolio, BCSReferenceInfo, InstrumentsType, BCSCandles
 import asyncio
 
 
@@ -11,15 +11,15 @@ async def main():
     # print(await BCSPortfolio(auth=auth).get_profile_state())
     # print("*"*10)
 
-    # print("--"*10)
-    # print(await BCSReferenceInfo(auth=auth).get_instruments(instruments_type=InstrumentsType.stock))
-    # print("--"*10)
+    print("--"*10)
+    print(await BCSReferenceInfo(auth=auth).get_instruments(instruments_type=InstrumentsType.stock))
+    print("--"*10)
 
     # print("--"*10)
     # print(await BCSReferenceInfo(auth=auth).get_tickers_info(tickers=["SBER"]))
     # print("--"*10)
 
-    print( await BCSCandles(auth=auth).get_candles(ticker="SBER", class_code="TQBR"))
+    # print( await BCSCandles(auth=auth).get_candles(ticker="SBER", class_code="TQBR"))
 
 config = BCSConfig()
 asyncio.run(main())

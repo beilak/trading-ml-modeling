@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 class BCSConfig(BaseSettings):
     BCS_API_TOKEN: str
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra='ignore')
 
 
 class BCSAuth:
